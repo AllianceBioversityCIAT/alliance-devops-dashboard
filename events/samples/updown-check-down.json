@@ -1,0 +1,27 @@
+[
+  {
+    "event": "check.down",
+    "time": "2026-06-05T15:55:15Z",
+    "description": "DOWN: https://prmsbi.alliance.com.py since 15:50:00 (UTC), reason: Connection timeout",
+    "check": {
+      "token": "maoy",
+      "url": "https://prmsbi.alliance.com.py",
+      "alias": "BI PRMS Front",
+      "uptime": 99.99,
+      "down": true,
+      "down_since": "2026-06-05T15:50:00Z",
+      "up_since": null,
+      "error": "Connection timeout",
+      "last_status": 0,
+      "apdex_t": 0.5,
+      "last_check_at": "2026-06-05T15:55:10Z"
+    },
+    "downtime": {
+      "id": "6a05817ed77e54f637faa87c",
+      "started_at": "2026-06-05T15:50:00Z",
+      "ended_at": null,
+      "duration": null,
+      "error": "Connection timeout"
+    }
+  }
+]

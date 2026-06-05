@@ -50,18 +50,19 @@ C4Container
 
     Container(api, "API Gateway", "REST API", "Ingestion endpoints")
     Container(jenkinsLambda, "jenkins-ingestion", "Lambda", "Processes deployment events")
-    Container(updownLambda, "updown-ingestion", "Lambda", "Processes uptime events")
+    Container(updownLambda, "updown-alert-ingestion", "Lambda", "Processes Updown alert webhooks")
     Container(releasesLambda, "release-notes-ingestion", "Lambda", "Processes release notes")
-    ContainerDb(events, "Events Table", "DynamoDB", "Deployments + uptime events")
+    ContainerDb(events, "Events Table", "DynamoDB", "Deployment events")
+    ContainerDb(uptimeEvents, "Uptime Events Table", "DynamoDB", "Updown alert events")
     ContainerDb(releases, "Releases Table", "DynamoDB", "Release notes")
     ContainerDb(improvements, "Improvements Table", "DynamoDB", "Technical improvements")
     ContainerDb(platforms, "Platforms Table", "DynamoDB", "Platform registry")
 
     Rel(api, jenkinsLambda, "POST /ingest/jenkins")
-    Rel(api, updownLambda, "POST /ingest/updown")
+    Rel(api, updownLambda, "POST /api/webhooks/updown/alerts")
     Rel(api, releasesLambda, "POST /ingest/release-notes")
     Rel(jenkinsLambda, events, "Write")
-    Rel(updownLambda, events, "Write")
+    Rel(updownLambda, uptimeEvents, "Write")
     Rel(releasesLambda, releases, "Write")
     Rel(releasesLambda, improvements, "Write")
 ```
@@ -80,12 +81,13 @@ External Source → API Gateway → Ingestion Lambda → Validate → Normalize 
 src/
 ├── lambdas/           # Independent ingestion handlers
 │   ├── jenkins-ingestion/
-│   ├── updown-ingestion/
+│   ├── updown-alert-ingestion/
 │   └── release-notes-ingestion/
 └── shared/            # Reusable libraries
     ├── config/        # Environment configuration loader
     ├── logger/        # Structured JSON logging
     ├── models/        # Domain models (aligned with specs)
+    ├── services/      # Business logic layer
     ├── repositories/  # DynamoDB abstraction layer
     ├── clients/       # External API clients (placeholders)
     └── utils/         # HTTP helpers, validation
@@ -99,7 +101,7 @@ Single-table-inspired pattern with entity type prefixes:
 |--------|----|----|
 | Platform | `PLATFORM#{id}` | `METADATA` |
 | Deployment | `PLATFORM#{platformId}` | `DEPLOYMENT#{timestamp}#{id}` |
-| Uptime | `PLATFORM#{platformId}` | `UPTIME#{timestamp}#{id}` |
+| Uptime Event | `PLATFORM#{platformId}` | `UPTIME#{idempotencyKey}` |
 | Release | `PLATFORM#{platformId}` | `RELEASE#{date}#{id}` |
 | Improvement | `PLATFORM#{platformId}` | `IMPROVEMENT#{createdAt}#{id}` |
 

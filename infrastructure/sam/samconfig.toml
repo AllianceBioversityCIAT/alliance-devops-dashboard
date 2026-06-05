@@ -10,5 +10,5 @@ build:
     sourcemap: true
     entry_points:
       - src/lambdas/jenkins-ingestion/index.ts
-      - src/lambdas/updown-ingestion/index.ts
+      - src/lambdas/updown-alert-ingestion/index.ts
       - src/lambdas/release-notes-ingestion/index.ts

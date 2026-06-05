@@ -1,0 +1,191 @@
+openapi: 3.0.3
+info:
+  title: Alliance DevOps Dashboard — Updown Alert Ingestion API
+  description: Webhook endpoint for ingesting Updown.io alert events
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server (npm run local:updown)
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/Prod
+    description: AWS API Gateway
+    variables:
+      apiId:
+        default: example
+      region:
+        default: us-east-1
+
+paths:
+  /api/webhooks/updown/alerts:
+    post:
+      summary: Ingest Updown alert events
+      description: |
+        Receives Updown webhook notifications as a JSON array.
+        Requires `x-webhook-secret` header for authentication.
+      operationId: ingestUpdownAlerts
+      tags:
+        - Updown
+      security:
+        - WebhookSecret: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/UpdownWebhookEvent'
+            example:
+              - event: check.down
+                time: '2026-06-05T15:55:15Z'
+                description: 'DOWN: https://prmsbi.alliance.com.py since 15:50:00 (UTC), reason: Connection timeout'
+                check:
+                  token: maoy
+                  url: https://prmsbi.alliance.com.py
+                  alias: BI PRMS Front
+                  uptime: 99.99
+                  down: true
+                  last_status: 0
+                  error: Connection timeout
+                downtime:
+                  id: 6a05817ed77e54f637faa87c
+                  started_at: '2026-06-05T15:50:00Z'
+                  ended_at: null
+                  duration: null
+                  error: Connection timeout
+      responses:
+        '200':
+          description: Events processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestSuccessResponse'
+              example:
+                message: Updown alert events processed
+                processed: 1
+                stored: 1
+                duplicates: 0
+                registeredChecks: 1
+                eventIds:
+                  - upt_20260605_abc123
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: 'Webhook payload must be a JSON array'
+        '401':
+          description: Invalid or missing webhook secret
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Invalid or missing webhook secret
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Internal server error
+
+components:
+  securitySchemes:
+    WebhookSecret:
+      type: apiKey
+      in: header
+      name: x-webhook-secret
+
+  schemas:
+    UpdownWebhookEvent:
+      type: object
+      required:
+        - event
+        - time
+        - check
+      properties:
+        event:
+          type: string
+          enum:
+            - check.down
+            - check.up
+        time:
+          type: string
+          format: date-time
+        description:
+          type: string
+        check:
+          $ref: '#/components/schemas/UpdownCheck'
+        downtime:
+          $ref: '#/components/schemas/UpdownDowntime'
+
+    UpdownCheck:
+      type: object
+      required:
+        - token
+        - url
+      properties:
+        token:
+          type: string
+        url:
+          type: string
+          format: uri
+        alias:
+          type: string
+          nullable: true
+        uptime:
+          type: number
+        down:
+          type: boolean
+        last_status:
+          type: integer
+        error:
+          type: string
+          nullable: true
+
+    UpdownDowntime:
+      type: object
+      properties:
+        id:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+        duration:
+          type: integer
+          nullable: true
+        error:
+          type: string
+
+    IngestSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        processed:
+          type: integer
+        stored:
+          type: integer
+        duplicates:
+          type: integer
+        registeredChecks:
+          type: integer
+        eventIds:
+          type: array
+          items:
+            type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string

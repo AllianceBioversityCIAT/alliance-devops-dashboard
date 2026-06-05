@@ -1,5 +1,6 @@
 import {
   DynamoDBClient,
+  ConditionalCheckFailedException,
   type DynamoDBClientConfig,
 } from '@aws-sdk/client-dynamodb';
 import {
@@ -58,6 +59,26 @@ export abstract class BaseDynamoDbRepository<T> {
       }),
     );
     return entity;
+  }
+
+  async saveIfNotExists(entity: T): Promise<boolean> {
+    const item = this.toItem(entity);
+
+    try {
+      await this.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: item,
+          ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)',
+        }),
+      );
+      return true;
+    } catch (error) {
+      if (error instanceof ConditionalCheckFailedException) {
+        return false;
+      }
+      throw error;
+    }
   }
 
   async get(pk: string, sk: string): Promise<T | null> {

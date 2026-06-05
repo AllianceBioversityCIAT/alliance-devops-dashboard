@@ -10,7 +10,7 @@ stack_name = "devops-dashboard-dev"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=dev LogLevel=debug"
+parameter_overrides = "Environment=dev LogLevel=debug UpdownWebhookSecret=replace_me"
 resolve_s3 = true
 
 [dev.global.parameters]

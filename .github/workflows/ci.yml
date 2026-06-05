@@ -73,6 +73,7 @@ jobs:
             "specs/metrics/technical-improvements.md"
             "specs/data-models/platform.md"
             "specs/data-models/deployment-event.md"
+            "specs/data-models/updown-check.md"
             "specs/data-models/uptime-event.md"
             "specs/data-models/release-note.md"
             "specs/data-models/technical-improvement.md"

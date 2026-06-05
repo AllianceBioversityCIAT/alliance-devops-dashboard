@@ -4,3 +4,8 @@ export { DeploymentEventRepository } from './deployment-event-repository.js';
 export { UptimeEventRepository } from './uptime-event-repository.js';
 export { ReleaseNoteRepository } from './release-note-repository.js';
 export { TechnicalImprovementRepository } from './technical-improvement-repository.js';
+export { UpdownCheckRepository } from './updown-check-repository.js';
+export { InMemoryUpdownCheckRepository } from './in-memory-updown-check-repository.js';
+export type { UpdownCheckStore } from './updown-check-store.js';
+export { InMemoryUptimeEventRepository } from './in-memory-uptime-event-repository.js';
+export type { UptimeEventStore } from './uptime-event-store.js';

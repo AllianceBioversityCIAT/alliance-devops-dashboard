@@ -1,4 +1,4 @@
-import type { UptimeEvent } from '../models/index.js';
+import type { UptimeEvent } from '../models/updown-webhook.js';
 import { fromDynamoDbItem, toDynamoDbItem } from '../models/uptime-event.js';
 import { BaseDynamoDbRepository } from './base-repository.js';
 
@@ -14,7 +14,7 @@ export class UptimeEventRepository extends BaseDynamoDbRepository<UptimeEvent> {
   protected getPrimaryKey(entity: UptimeEvent): { PK: string; SK: string } {
     return {
       PK: `PLATFORM#${entity.platformId}`,
-      SK: `UPTIME#${entity.timestamp}#${entity.id}`,
+      SK: `UPTIME#${entity.idempotencyKey}`,
     };
   }
 

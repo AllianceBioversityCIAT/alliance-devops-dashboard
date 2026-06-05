@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test:coverage
+
+      - name: Build
+        run: npm run build
+
+  sam-validate:
+    name: SAM Template Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SAM CLI
+        uses: aws-actions/setup-sam@v2
+
+      - name: Validate SAM template
+        run: sam validate --template-file infrastructure/sam/template.yaml
+
+  spec-check:
+    name: Spec Integrity Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify spec files exist
+        run: |
+          required_specs=(
+            "specs/integrations/jenkins.md"
+            "specs/integrations/updown.md"
+            "specs/integrations/release-notes.md"
+            "specs/metrics/deployments.md"
+            "specs/metrics/uptime.md"
+            "specs/metrics/incidents.md"
+            "specs/metrics/technical-improvements.md"
+            "specs/data-models/platform.md"
+            "specs/data-models/deployment-event.md"
+            "specs/data-models/uptime-event.md"
+            "specs/data-models/release-note.md"
+            "specs/data-models/technical-improvement.md"
+            "specs/dashboard/dashboard-overview.md"
+          )
+
+          for spec in "${required_specs[@]}"; do
+            if [ ! -f "$spec" ]; then
+              echo "Missing required spec: $spec"
+              exit 1
+            fi
+          done
+
+          echo "All required spec files present."

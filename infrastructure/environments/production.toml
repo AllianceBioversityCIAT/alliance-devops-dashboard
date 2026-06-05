@@ -1,0 +1,17 @@
+# Production Environment Configuration
+# Deploy with: sam deploy --config-env production
+
+version = 0.1
+
+[production]
+[production.deploy]
+[production.deploy.parameters]
+stack_name = "devops-dashboard-production"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=production LogLevel=warn"
+resolve_s3 = true
+
+[production.global.parameters]
+stack_name = "devops-dashboard-production"

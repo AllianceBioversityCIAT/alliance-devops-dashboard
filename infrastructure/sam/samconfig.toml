@@ -1,0 +1,14 @@
+# SAM build configuration
+# See: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+
+version: 0.1
+
+build:
+  esbuild:
+    minify: true
+    target: es2022
+    sourcemap: true
+    entry_points:
+      - src/lambdas/jenkins-ingestion/index.ts
+      - src/lambdas/updown-ingestion/index.ts
+      - src/lambdas/release-notes-ingestion/index.ts

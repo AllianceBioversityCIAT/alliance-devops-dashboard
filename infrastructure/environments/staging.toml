@@ -1,0 +1,17 @@
+# Staging Environment Configuration
+# Deploy with: sam deploy --config-env staging
+
+version = 0.1
+
+[staging]
+[staging.deploy]
+[staging.deploy.parameters]
+stack_name = "devops-dashboard-staging"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=staging LogLevel=info"
+resolve_s3 = true
+
+[staging.global.parameters]
+stack_name = "devops-dashboard-staging"

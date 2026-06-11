@@ -68,6 +68,12 @@ Globals:
         PLATFORMS_TABLE_NAME: !Ref PlatformsTable
         AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1'
     Tracing: Active
+    Tags:
+      Project: ALL
+      Functionality: devops-dashboard
+      Environment: !Ref Environment
+  Api:
+    PropagateTags: true
 
 # =============================================================================
 # RESOURCES
@@ -111,7 +117,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
 
@@ -134,7 +142,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
 
@@ -170,7 +180,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
 
@@ -193,7 +205,9 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
 
@@ -230,11 +244,11 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
-        - Key: Component
-          Value: updown-alert-ingestion
 
   UpdownChecksTable:
     Type: AWS::DynamoDB::Table
@@ -269,11 +283,11 @@ Resources:
         PointInTimeRecoveryEnabled: true
       Tags:
         - Key: Project
-          Value: alliance-devops-dashboard
+          Value: ALL
+        - Key: Functionality
+          Value: devops-dashboard
         - Key: Environment
           Value: !Ref Environment
-        - Key: Component
-          Value: updown-alert-ingestion
 
   # ---------------------------------------------------------------------------
   # Lambda Functions

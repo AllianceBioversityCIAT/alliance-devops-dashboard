@@ -12,6 +12,7 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=production LogLevel=warn"
 resolve_s3 = true
+tags = "Project=\"ALL\" Functionality=\"devops-dashboard\" Environment=\"production\""
 
 [production.global.parameters]
 stack_name = "devops-dashboard-production"

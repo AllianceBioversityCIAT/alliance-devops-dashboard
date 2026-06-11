@@ -1,14 +1,8 @@
-# SAM build configuration
-# See: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html
+# SAM CLI configuration (build defaults for this template).
+# Deploy uses infrastructure/environments/dev.toml — not this file.
+# See: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-config.html
 
-version: 0.1
+version = 0.1
 
-build:
-  esbuild:
-    minify: true
-    target: es2022
-    sourcemap: true
-    entry_points:
-      - src/lambdas/jenkins-ingestion/index.ts
-      - src/lambdas/updown-alert-ingestion/index.ts
-      - src/lambdas/release-notes-ingestion/index.ts
+[default.build.parameters]
+cached = true

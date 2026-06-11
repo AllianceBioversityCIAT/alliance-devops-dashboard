@@ -284,8 +284,8 @@ Resources:
     Properties:
       FunctionName: !Sub 'devops-dashboard-${Environment}-jenkins-ingestion'
       Description: Ingests deployment events from Jenkins
-      CodeUri: ../../dist/lambdas/jenkins-ingestion/
-      Handler: index.handler
+      CodeUri: ../../dist/
+      Handler: lambdas/jenkins-ingestion/index.handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref EventsTable
@@ -301,8 +301,8 @@ Resources:
     Properties:
       FunctionName: !Sub 'alliance-devops-updown-alert-ingestion-${Environment}'
       Description: Ingests Updown webhook alert events
-      CodeUri: ../../dist/lambdas/updown-alert-ingestion/
-      Handler: index.handler
+      CodeUri: ../../dist/
+      Handler: lambdas/updown-alert-ingestion/index.handler
       Environment:
         Variables:
           APP_NAME: alliance-devops-dashboard
@@ -341,8 +341,8 @@ Resources:
     Properties:
       FunctionName: !Sub 'devops-dashboard-${Environment}-release-notes-ingestion'
       Description: Ingests release notes and technical improvements
-      CodeUri: ../../dist/lambdas/release-notes-ingestion/
-      Handler: index.handler
+      CodeUri: ../../dist/
+      Handler: lambdas/release-notes-ingestion/index.handler
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ReleasesTable

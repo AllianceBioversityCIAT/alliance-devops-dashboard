@@ -79,11 +79,17 @@ export function validateWebhookEvent(item: unknown, index = 0): UpdownWebhookEve
 export function validateWebhookSecret(
   headers: Record<string, string | undefined>,
   expectedSecret: string,
+  queryParams?: Record<string, string | undefined> | null,
 ): void {
+  const normalizedQuery: Record<string, string | undefined> = {};
+  for (const [key, value] of Object.entries(queryParams ?? {})) {
+    normalizedQuery[key.toLowerCase()] = value;
+  }
+
   const provided =
     headers['x-webhook-secret'] ??
-    headers['X-Webhook-Secret'] ??
-    headers['X-WEBHOOK-SECRET'];
+    normalizedQuery['webhook-secret'] ??
+    normalizedQuery['x-webhook-secret'];
 
   if (!provided || provided !== expectedSecret) {
     throw new UpdownWebhookAuthError('Invalid or missing webhook secret');

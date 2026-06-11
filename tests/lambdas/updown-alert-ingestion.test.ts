@@ -87,6 +87,38 @@ describe('updown-alert-ingestion handler', () => {
     expect(body.eventIds).toEqual(['upt_test']);
   });
 
+  it('accepts secret from query string parameters', async () => {
+    mockProcessWebhook.mockResolvedValue({
+      processed: 1,
+      stored: 1,
+      duplicates: 0,
+      registeredChecks: 0,
+      eventIds: ['upt_test'],
+    });
+
+    const event = createMockEvent(
+      [
+        {
+          event: 'check.down',
+          time: '2026-06-05T15:55:15Z',
+          check: { token: 'maoy', url: 'https://prmsbi.alliance.com.py' },
+        },
+      ],
+      '',
+    );
+    event.headers = {};
+    event.queryStringParameters = { 'webhook-secret': 'test-secret' };
+
+    const result = await handler(event, mockContext);
+
+    expect(result.statusCode).toBe(200);
+    expect(mockProcessWebhook).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryStringParameters: { 'webhook-secret': 'test-secret' },
+      }),
+    );
+  });
+
   it('returns 401 when service rejects invalid secret', async () => {
     const { UpdownWebhookAuthError } = await import(
       '../../src/shared/services/updown-webhook-validator.js'

@@ -16,6 +16,7 @@ import {
 export interface ProcessWebhookInput {
   body: string | null | undefined;
   headers: Record<string, string | undefined>;
+  queryStringParameters?: Record<string, string | undefined> | null;
 }
 
 export interface ProcessWebhookResult {
@@ -43,7 +44,11 @@ export class UpdownAlertService {
   }
 
   processWebhook(input: ProcessWebhookInput): Promise<ProcessWebhookResult> {
-    validateWebhookSecret(input.headers, this.config.updownWebhookSecret);
+    validateWebhookSecret(
+      input.headers,
+      this.config.updownWebhookSecret,
+      input.queryStringParameters,
+    );
 
     const events = parseWebhookBody(input.body);
     return this.persistEvents(events);

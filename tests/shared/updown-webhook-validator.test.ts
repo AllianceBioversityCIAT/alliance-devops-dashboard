@@ -39,7 +39,7 @@ describe('updown webhook validator', () => {
     expect(() => parseWebhookBody(body)).toThrow(/unsupported event type/);
   });
 
-  it('validates webhook secret', () => {
+  it('validates webhook secret from header', () => {
     expect(() =>
       validateWebhookSecret({ 'x-webhook-secret': 'secret123' }, 'secret123'),
     ).not.toThrow();
@@ -47,5 +47,15 @@ describe('updown webhook validator', () => {
     expect(() => validateWebhookSecret({ 'x-webhook-secret': 'wrong' }, 'secret123')).toThrow(
       UpdownWebhookAuthError,
     );
+  });
+
+  it('validates webhook secret from query parameter', () => {
+    expect(() =>
+      validateWebhookSecret({}, 'secret123', { 'webhook-secret': 'secret123' }),
+    ).not.toThrow();
+
+    expect(() =>
+      validateWebhookSecret({}, 'secret123', { 'webhook-secret': 'wrong' }),
+    ).toThrow(UpdownWebhookAuthError);
   });
 });

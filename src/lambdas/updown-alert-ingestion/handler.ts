@@ -77,6 +77,7 @@ export async function handler(
     const result = await getService().processWebhook({
       body: event.body,
       headers: { 'x-webhook-secret': headers['x-webhook-secret'] },
+      queryStringParameters: event.queryStringParameters,
     });
 
     logger.info('Updown alert webhook processed', {

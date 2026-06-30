@@ -1,6 +1,6 @@
 # Deploy alliance-devops-dashboard to AWS (dev).
 #
-# Migration path: use workflow_dispatch first, then enable automatic deploys on push to main.
+# Triggers: push to dev (automatic deploy) and workflow_dispatch (manual).
 #
 # Required GitHub repository secrets (Settings → Secrets and variables → Actions):
 #   DEPLOYMENT_AWS_ACCESS_KEY_ID     — github-actions-deploy user (CloudFormation/Lambda/DynamoDB/IAM/S3/SecretsManager)
@@ -15,10 +15,9 @@
 name: Deploy Dev
 
 on:
+  push:
+    branches: [dev]
   workflow_dispatch:
-  # Enable automatic deploys after pilot runs succeed.
-  # push:
-  #   branches: [main]
 
 concurrency:
   group: deploy-dev-${{ github.ref }}

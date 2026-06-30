@@ -1,12 +1,23 @@
 # Uptime Metrics Specification
 
-> **Status:** Draft  
-> **Version:** 1.0.0  
-> **Last Updated:** 2026-06-05
+> **Status:** Accepted  
+> **Version:** 2.0.0  
+> **Last Updated:** 2026-06-05  
+> **Component:** `updown-alert-ingestion`  
+> **Related Table:** `alliance-devops-uptime-events-{environment}`
 
 ## Overview
 
-Defines availability and reliability metrics computed from Updown ingestion data.
+Defines availability and reliability metrics computed from Updown alert events stored by `updown-alert-ingestion`.
+
+## Data Sources
+
+| Phase | Source | Data Available |
+|-------|--------|----------------|
+| **Phase 1** (current) | Updown webhooks → DynamoDB | Alert events: down/up, downtime duration, error messages, uptime snapshot |
+| **Phase 2** (future) | Updown REST API poll | APDEX, multi-location latency, response time trends, historical grids |
+
+Updown retains rich monitoring data (APDEX charts, latency by city, daily history). Phase 1 metrics are derived from **stored alert events**; Phase 2 enriches with API data.
 
 ## Source Integration
 
@@ -16,37 +27,53 @@ Defines availability and reliability metrics computed from Updown ingestion data
 
 [Uptime Event](../data-models/uptime-event.md)
 
-## Metrics
+## Metrics — Phase 1 (from stored events)
 
 ### Availability
 
 | Metric | Description | Calculation |
 |--------|-------------|-------------|
-| `uptime.percentage` | Service uptime percentage | `(total_time - downtime) / total_time` × 100 |
-| `uptime.percentage.rolling_30d` | 30-day rolling uptime | Rolling window calculation |
+| `uptime.snapshot` | Uptime at event time | `uptimeSnapshot` from latest event per platform |
+| `uptime.percentage.derived` | Derived uptime from incidents | Based on downtime events in time window (future aggregation) |
 
 ### Downtime
 
 | Metric | Description | Calculation |
 |--------|-------------|-------------|
-| `downtime.count` | Number of downtime incidents | Count of DOWN → UP transitions |
-| `downtime.duration.total` | Total downtime duration | Sum of `durationMs` |
-| `downtime.duration.avg` | Average incident duration | Mean of downtime durations |
-| `downtime.mttr` | Mean time to recovery | Average time from DOWN to UP |
+| `downtime.count` | Number of downtime incidents | Count of `check.down` events per platform |
+| `downtime.duration.total` | Total downtime | Sum of `downtimeDurationSec` from `check.up` events |
+| `downtime.duration.avg` | Average incident duration | Mean of completed downtime durations |
+| `downtime.mttr` | Mean time to recovery | Average `downtimeDurationSec` |
 
-### Response Time
+### Incident Timeline
 
 | Metric | Description | Calculation |
 |--------|-------------|-------------|
-| `response_time.avg` | Average response time | Mean of `responseTimeMs` |
-| `response_time.p95` | 95th percentile response time | P95 of `responseTimeMs` |
+| `incidents.active` | Currently down platforms | Latest event per platform where `status = DOWN` |
+| `incidents.recent` | Recent incidents | `check.down` events in time window |
+
+## Metrics — Phase 2 (from Updown API)
+
+| Metric | Description | Source |
+|--------|-------------|--------|
+| `uptime.percentage.rolling_30d` | 30-day rolling uptime | Updown API / check stats |
+| `response_time.avg` | Average response time | Updown API / metrics endpoint |
+| `response_time.p95` | 95th percentile | Updown API |
+| `apdex.score` | APDEX score | Updown API |
+| `latency.by_location` | Per-city latency | Updown API |
 
 ## Dimensions
 
-- `platformId`
-- `checkId`
-- `environment`
-- `timeRange`
+- `platformId` (e.g., `bi-prms-front`)
+- `checkToken`
+- `environment` (`dev`, `staging`, `production`)
+- `timeRange` (`24h`, `7d`, `30d`, `90d`)
+
+## Initial Platform
+
+| platformId | platformName | Endpoint |
+|------------|--------------|----------|
+| `bi-prms-front` | BI PRMS Front | `https://prmsbi.alliance.com.py` |
 
 ## SLA Definitions
 
@@ -57,15 +84,20 @@ Defines availability and reliability metrics computed from Updown ingestion data
 
 ## Dashboard Widgets
 
-| Widget | Metrics Used |
-|--------|--------------|
-| Uptime Gauge | `uptime.percentage.rolling_30d` |
-| Downtime Timeline | Raw `UptimeEvent` records |
-| Incident Count | `downtime.count` |
-| Response Time Chart | `response_time.avg` |
+| Widget | Phase | Metrics Used |
+|--------|-------|--------------|
+| Active Incidents | 1 | `incidents.active` |
+| Downtime Timeline | 1 | Raw `UptimeEvent` records |
+| Incident Count | 1 | `downtime.count` |
+| MTTR Trend | 1 | `downtime.mttr` |
+| Uptime Gauge (30d) | 2 | `uptime.percentage.rolling_30d` |
+| Response Time Chart | 2 | `response_time.avg` |
+| Latency by Location | 2 | `latency.by_location` |
 
 ## Acceptance Criteria
 
-- [ ] Uptime calculable from stored events
-- [ ] SLA breach detection logic documented
-- [ ] Correlation with deployment events specified (future)
+- [ ] Downtime incidents derivable from `check.down` / `check.up` event pairs
+- [ ] MTTR calculable from `downtimeDurationSec`
+- [ ] Metrics scoped by `platformId` (starting with `bi-prms-front`)
+- [ ] Phase 2 API metrics documented as future scope
+- [ ] SLA breach detection logic specified for aggregation phase

@@ -150,6 +150,37 @@ External API clients (`JenkinsClient`, `UpdownClient`) are placeholders that thr
 
 ---
 
+## ADR-008: Updown Alert Ingestion Design
+
+**Status:** Accepted  
+**Date:** 2026-06-05
+
+### Context
+
+First operational component ingests Updown webhook alerts. Updown stores rich metrics (APDEX, latency by location, history) but webhooks only send alert events. Alliance products use internal `platformId` identifiers not present in Updown payloads.
+
+### Decision
+
+- Component: `updown-alert-ingestion`
+- Endpoint: `POST /api/webhooks/updown/alerts`
+- Dedicated DynamoDB table: `alliance-devops-uptime-events-{environment}`
+- Checks registry table: `alliance-devops-updown-checks-{environment}`
+- Environments: `dev`, `staging`, `production`
+- Auth: `x-webhook-secret` header vs `UPDOWN_WEBHOOK_SECRET`
+- Check registry: auto-register on first webhook; `platformId` slug from `check.alias`
+- Initial platform: `bi-prms-front` derived from alias "BI PRMS Front" (token `maoy`)
+- Store `rawPayload` with every event; normalize key fields for dashboard queries
+- Do not replicate Updown dashboard metrics in Phase 1; API poll in Phase 2
+
+### Consequences
+
+- ✅ Scales to 30+ applications without secret/env map maintenance
+- ✅ New Updown checks work automatically on first webhook
+- ⚠️ `platformId` derived from alias — review auto-registered checks periodically
+- ⚠️ Secret contains only `UPDOWN_WEBHOOK_SECRET`
+
+---
+
 ## Template for New ADRs
 
 ```markdown

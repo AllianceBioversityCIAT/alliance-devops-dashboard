@@ -12,6 +12,7 @@ confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=staging LogLevel=info"
 resolve_s3 = true
+tags = "Project=\"ALL\" Functionality=\"devops-dashboard\" Environment=\"staging\""
 
 [staging.global.parameters]
 stack_name = "devops-dashboard-staging"

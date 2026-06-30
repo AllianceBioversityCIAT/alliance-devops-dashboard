@@ -33,26 +33,18 @@ export interface DeploymentEvent {
   createdAt: string;
 }
 
-export type UptimeStatus = 'UP' | 'DOWN' | 'PAUSED';
-export type UptimeEventType = 'STATUS_CHANGE' | 'DOWNTIME_START' | 'DOWNTIME_END';
+export type UptimeStatus = 'UP' | 'DOWN';
+export type UpdownEventType =
+  | 'check.down'
+  | 'check.up'
+  | 'check.ssl_invalid'
+  | 'check.ssl_valid'
+  | 'check.ssl_expiration'
+  | 'check.ssl_renewed'
+  | 'check.performance_drop';
 
-export interface UptimeEvent {
-  id: string;
-  platformId: string;
-  source: 'UPDOWN';
-  checkId: string;
-  checkName: string;
-  url?: string;
-  eventType: UptimeEventType;
-  status: UptimeStatus;
-  responseTimeMs?: number;
-  startedAt?: string;
-  endedAt?: string;
-  durationMs?: number;
-  errorMessage?: string;
-  timestamp: string;
-  createdAt: string;
-}
+export type { UptimeEvent, UpdownWebhookEvent, UpdownWebhookCheck, UpdownWebhookDowntime } from './updown-webhook.js';
+export { PHASE1_UPDOWN_EVENTS } from './updown-webhook.js';
 
 export type ImprovementCategory =
   | 'TECHNICAL'
@@ -107,6 +99,7 @@ export type EntityType =
   | 'PLATFORM'
   | 'DEPLOYMENT_EVENT'
   | 'UPTIME_EVENT'
+  | 'UPDOWN_CHECK'
   | 'RELEASE_NOTE'
   | 'TECHNICAL_IMPROVEMENT';
 

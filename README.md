@@ -11,7 +11,7 @@ This repository follows **Spec-Driven Development (SDD)** — the `specs/` direc
 | Source | Data | Status |
 |--------|------|--------|
 | [Jenkins](specs/integrations/jenkins.md) | Deployments, build status, releases | Skeleton |
-| [Updown.io](specs/integrations/updown.md) | Availability, downtime, uptime | Skeleton |
+| [Updown.io](specs/integrations/updown.md) | Availability alerts (down/up) | **Implemented** (`updown-alert-ingestion`) |
 | [Release Notes](specs/integrations/release-notes.md) | Improvements, enhancements, bug fixes | Skeleton |
 
 ### Future Integrations
@@ -47,6 +47,7 @@ alliance-devops-dashboard/
 │       ├── logger/         # Structured JSON logging
 │       ├── models/         # TypeScript domain models
 │       ├── repositories/   # DynamoDB abstraction
+│       ├── services/         # Business logic layer
 │       ├── clients/        # External API clients (placeholders)
 │       └── utils/          # HTTP helpers, validation
 ├── infrastructure/
@@ -94,7 +95,34 @@ npm run lint
 npm run build
 ```
 
-### Local Lambda Testing
+### Local Testing (Swagger UI — no AWS required)
+
+The fastest way to test `updown-alert-ingestion` locally with Swagger UI:
+
+```bash
+cp .env.example .env   # Windows: copy .env.example .env
+npm install
+npm run local:updown
+```
+
+Then open:
+
+- **Swagger UI:** http://localhost:3000/docs
+- **Webhook API:** http://localhost:3000/api/webhooks/updown/alerts
+
+In Swagger UI:
+
+1. Click **Authorize** and set `x-webhook-secret` = `replace_me` (or your `.env` value)
+2. Select server **Local development server**
+3. Open `POST /api/webhooks/updown/alerts` → **Try it out**
+4. Use the example payload (token `maoy`, alias `BI PRMS Front` → auto-registers as `bi-prms-front`)
+5. Click **Execute** — expect HTTP `200` with `registeredChecks: 1` on first call
+
+Local mode uses `UPTIME_EVENTS_TABLE=local` and `UPDOWN_CHECKS_TABLE=local` (in-memory, no AWS).
+
+Sample payload file: `events/samples/updown-check-down.json`
+
+### Local Lambda Testing (SAM + Docker)
 
 ```bash
 npm run build
@@ -102,7 +130,33 @@ sam build --template-file infrastructure/sam/template.yaml
 sam local start-api --template-file infrastructure/sam/template.yaml
 ```
 
-Example ingestion request:
+Example curl request:
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/webhooks/updown/alerts \
+  -H "Content-Type: application/json" \
+  -H "x-webhook-secret: replace_me" \
+  -d '[{
+    "event": "check.down",
+    "time": "2026-06-05T15:55:15Z",
+    "description": "DOWN: https://prmsbi.alliance.com.py",
+    "check": {
+      "token": "maoy",
+      "url": "https://prmsbi.alliance.com.py",
+      "alias": "BI PRMS Front",
+      "down": true,
+      "last_status": 0,
+      "error": "Connection timeout"
+    },
+    "downtime": {
+      "id": "6a05817ed77e54f637faa87c",
+      "started_at": "2026-06-05T15:50:00Z",
+      "error": "Connection timeout"
+    }
+  }]'
+```
+
+Example Jenkins ingestion request:
 
 ```bash
 curl -X POST http://127.0.0.1:3000/ingest/jenkins \
@@ -148,6 +202,8 @@ infrastructure/ (deployment)
 | Document | Description |
 |----------|-------------|
 | [Architecture](docs/architecture.md) | System design and data flow |
+| [Data Model](docs/data-model.md) | DynamoDB design and domain models |
+| [Updown Alerts OpenAPI](docs/openapi/updown-alerts.yaml) | Webhook API contract |
 | [Roadmap](docs/roadmap.md) | Phased delivery plan |
 | [Decisions](docs/decisions.md) | Architecture Decision Records |
 | [Dashboard Spec](specs/dashboard/dashboard-overview.md) | Dashboard requirements |

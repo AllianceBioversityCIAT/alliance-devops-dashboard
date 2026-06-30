@@ -148,12 +148,11 @@ jobs:
         run: sam build --template-file infrastructure/sam/template.yaml
 
       - name: SAM deploy
-        working-directory: infrastructure/sam
         run: |
           set -euo pipefail
           sam deploy \
-            --template-file ../../.aws-sam/build/template.yaml \
-            --config-file ../environments/dev.toml \
+            --template-file .aws-sam/build/template.yaml \
+            --config-file infrastructure/environments/dev.toml \
             --config-env dev \
             --stack-name "${{ env.STACK_NAME }}" \
             --no-confirm-changeset \

@@ -150,9 +150,10 @@ jobs:
       - name: SAM deploy
         run: |
           set -euo pipefail
+          # --config-file is resolved relative to the template directory (.aws-sam/build/), not repo root.
           sam deploy \
             --template-file .aws-sam/build/template.yaml \
-            --config-file infrastructure/environments/dev.toml \
+            --config-file "${{ github.workspace }}/infrastructure/environments/dev.toml" \
             --config-env dev \
             --stack-name "${{ env.STACK_NAME }}" \
             --no-confirm-changeset \

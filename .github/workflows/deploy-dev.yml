@@ -31,6 +31,7 @@ env:
   SAM_TEMPLATE: infrastructure/sam/template.yaml
   SAM_CONFIG: infrastructure/environments/dev.toml
   SECRET_NAME: dev/app/backend/devops-dashboard/updown-ingestion
+  POWERBI_SECRET_NAME: dev/app/backend/devops-dashboard/powerbi-export
   LOG_LEVEL: debug
 
 permissions:
@@ -70,6 +71,7 @@ jobs:
       - name: Verify build output
         run: |
           test -d dist/lambdas/updown-alert-ingestion
+          test -d dist/lambdas/powerbi-data-export
           test -f dist/package.json
 
   sam-validate:
@@ -144,6 +146,33 @@ jobs:
           echo "::add-mask::${UPDOWN_WEBHOOK_SECRET}"
           echo "value=${UPDOWN_WEBHOOK_SECRET}" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve Power BI API key
+        id: powerbi_secret
+        run: |
+          set -euo pipefail
+          aws secretsmanager get-secret-value \
+            --secret-id "${{ env.POWERBI_SECRET_NAME }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --query SecretString \
+            --output text > powerbi_secret_raw.txt
+
+          POWERBI_API_KEY=$(python3 - <<'PY'
+          import json
+          import sys
+
+          raw = open("powerbi_secret_raw.txt", encoding="utf-8").read().strip()
+          data = json.loads(raw)
+          secret = data.get("POWERBI_API_KEY")
+          if not secret:
+              sys.stderr.write("POWERBI_API_KEY not found in secret JSON\n")
+              sys.exit(1)
+          print(secret)
+          PY
+          )
+          rm -f powerbi_secret_raw.txt
+          echo "::add-mask::${POWERBI_API_KEY}"
+          echo "value=${POWERBI_API_KEY}" >> "$GITHUB_OUTPUT"
+
       - name: SAM build
         run: sam build --template-file infrastructure/sam/template.yaml
 
@@ -162,6 +191,11 @@ jobs:
               "Environment=${{ env.ENVIRONMENT }}" \
               "LogLevel=${{ env.LOG_LEVEL }}" \
               "UpdownWebhookSecret=${{ steps.secret.outputs.value }}" \
+              "PowerBiApiKey=${{ steps.powerbi_secret.outputs.value }}" \
+              "UpdownChecksTableNameOverride=alliance-devops-updown-checks-dev" \
+              "UptimeEventsTableNameOverride=alliance-devops-uptime-events-dev" \
+              "DeploymentsTableName=jenkinsexecutions_test" \
+              "DeploymentMetadataTableName=deployment_metadata" \
             --capabilities CAPABILITY_IAM \
             --region "${{ env.AWS_REGION }}" \
             --resolve-s3
@@ -191,6 +225,11 @@ jobs:
             --region "${{ env.AWS_REGION }}" \
             --query "Stacks[0].Outputs[?OutputKey=='UpdownAlertWebhookUrl'].OutputValue" \
             --output text)
+          POWERBI_URL=$(aws cloudformation describe-stacks \
+            --stack-name "${{ env.STACK_NAME }}" \
+            --region "${{ env.AWS_REGION }}" \
+            --query "Stacks[0].Outputs[?OutputKey=='PowerBiExportBaseUrl'].OutputValue" \
+            --output text)
           {
             echo "## Deploy Dev — success"
             echo ""
@@ -199,6 +238,9 @@ jobs:
             echo "| Stack | \`${{ env.STACK_NAME }}\` |"
             echo "| Region | \`${{ env.AWS_REGION }}\` |"
             echo "| Updown webhook base URL | \`$WEBHOOK_URL\` |"
+            echo "| Power BI export base URL | \`$POWERBI_URL\` |"
             echo ""
             echo "Configure Updown.io with \`$WEBHOOK_URL?webhook-secret=<secret>\`"
+            echo ""
+            echo "Power BI endpoints require header \`x-api-key\` (see Secrets Manager \`${{ env.POWERBI_SECRET_NAME }}\`)"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,600 @@
+openapi: 3.0.3
+info:
+  title: Alliance DevOps Dashboard — Power BI Export API
+  description: Read-only export endpoints for Power BI and Lakehouse consumption.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: Local development server (npm run local:powerbi)
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/Prod
+    description: AWS API Gateway
+    variables:
+      apiId:
+        default: example
+      region:
+        default: us-east-1
+
+tags:
+  - name: Power BI Export
+    description: DynamoDB export endpoints protected by API Gateway API key
+
+paths:
+  /powerbi/checks:
+    get:
+      summary: List checks (paginated)
+      operationId: listChecks
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Paginated checks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChecksResponse'
+              example:
+                data:
+                  - PK: CHECK#maoy
+                    SK: METADATA
+                    checkToken: maoy
+                    platformId: bi-prms-front
+                    endpointUrl: https://prmsbi.alliance.com.py
+                    environment: dev
+                    status: ACTIVE
+                    source: UPDOWN
+                    autoRegistered: true
+                    firstSeenAt: '2026-06-05T15:55:15.000Z'
+                    lastSeenAt: '2026-06-05T15:55:15.000Z'
+                    createdAt: '2026-06-05T15:55:15.000Z'
+                    updatedAt: '2026-06-05T15:55:15.000Z'
+                count: 1
+                nextToken: eyJQSyI6ICJDSUVEL21hb3kifQ==
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/checks/full:
+    get:
+      summary: Export all checks
+      operationId: exportChecksFull
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Full checks export
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullChecksResponse'
+              example:
+                data: []
+                count: 0
+                generatedAt: '2026-06-30T19:00:00.000Z'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/checks/by-month:
+    get:
+      summary: List checks for a calendar month
+      description: Requires `month` (1-12) and `year`. Filtered by `updatedAt`.
+      operationId: listChecksByMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MonthParam'
+        - $ref: '#/components/parameters/YearParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Checks for the requested month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthChecksResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/checks/current-month:
+    get:
+      summary: List checks for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `updatedAt`. Supports `limit` and `nextToken`.
+      operationId: listChecksCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Checks for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthChecksResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/events:
+    get:
+      summary: List uptime events (paginated)
+      operationId: listEvents
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Paginated events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/events/full:
+    get:
+      summary: Export all uptime events
+      operationId: exportEventsFull
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Full events export
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullEventsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/events/by-month:
+    get:
+      summary: List uptime events for a calendar month
+      description: Requires `month` (1-12) and `year`. Filtered by `occurredAt`.
+      operationId: listEventsByMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MonthParam'
+        - $ref: '#/components/parameters/YearParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Events for the requested month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthEventsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/events/current-month:
+    get:
+      summary: List uptime events for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `occurredAt`. Supports `limit` and `nextToken`.
+      operationId: listEventsCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Events for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthEventsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/deployments:
+    get:
+      summary: List Jenkins executions (paginated)
+      operationId: listDeployments
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Paginated deployments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeploymentsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/deployments/full:
+    get:
+      summary: Export all Jenkins executions
+      operationId: exportDeploymentsFull
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Full deployments export
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullDeploymentsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/deployments/by-month:
+    get:
+      summary: List Jenkins executions for a calendar month
+      description: Requires `month` (1-12) and `year`. Filtered by `buildDate`.
+      operationId: listDeploymentsByMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/MonthParam'
+        - $ref: '#/components/parameters/YearParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Deployments for the requested month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthDeploymentsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/deployments/current-month:
+    get:
+      summary: List Jenkins executions for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `buildDate`. Supports `limit` and `nextToken`.
+      operationId: listDeploymentsCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Deployments for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthDeploymentsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API Gateway API key (validated by API Gateway, not Lambda)
+
+  parameters:
+    MonthParam:
+      name: month
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 12
+      description: Calendar month (1-12)
+
+    YearParam:
+      name: year
+      in: query
+      required: true
+      schema:
+        type: integer
+        minimum: 1970
+        maximum: 9999
+      description: Calendar year (UTC)
+
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+      description: Maximum number of records per page (max 1000)
+
+    NextTokenParam:
+      name: nextToken
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Base64-encoded DynamoDB pagination token
+
+  responses:
+    BadRequest:
+      description: Invalid query parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: limit must not exceed 1000
+
+    Forbidden:
+      description: Missing or invalid x-api-key (API Gateway)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Forbidden
+
+    InternalError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: Internal server error
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    PaginatedResponseBase:
+      type: object
+      required: [data, count]
+      properties:
+        data:
+          type: array
+        count:
+          type: integer
+        nextToken:
+          type: string
+
+    FullResponseBase:
+      type: object
+      required: [data, count, generatedAt]
+      properties:
+        data:
+          type: array
+        count:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+
+    ByMonthResponseBase:
+      type: object
+      required: [data, count, month, year, fromDate, toDate]
+      properties:
+        data:
+          type: array
+        count:
+          type: integer
+        month:
+          type: integer
+        year:
+          type: integer
+        fromDate:
+          type: string
+          format: date-time
+        toDate:
+          type: string
+          format: date-time
+        nextToken:
+          type: string
+
+    CheckExportRecord:
+      type: object
+      properties:
+        PK: { type: string }
+        SK: { type: string }
+        checkToken: { type: string }
+        platformId: { type: string }
+        platformName: { type: string }
+        endpointUrl: { type: string }
+        environment: { type: string }
+        status: { type: string }
+        source: { type: string }
+        autoRegistered: { type: boolean }
+        firstSeenAt: { type: string }
+        lastSeenAt: { type: string }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    EventExportRecord:
+      type: object
+      properties:
+        PK: { type: string }
+        SK: { type: string }
+        eventId: { type: string }
+        platformId: { type: string }
+        platformName: { type: string }
+        checkToken: { type: string }
+        eventType: { type: string }
+        status: { type: string }
+        occurredAt: { type: string }
+        downtimeId: { type: string }
+        downtimeStartedAt: { type: string }
+        endpointUrl: { type: string }
+        environment: { type: string }
+        errorMessage: { type: string }
+        description: { type: string }
+        uptimeSnapshot: { type: number }
+        source: { type: string }
+        createdAt: { type: string }
+        rawPayload:
+          type: object
+          additionalProperties: true
+
+    DeploymentExportRecord:
+      type: object
+      properties:
+        id: { type: string }
+        buildDate: { type: string }
+        buildNumber: { type: string }
+        job: { type: string }
+        applicationName: { type: string, description: From deployment_metadata via job_name join }
+        environment: { type: string, description: From deployment_metadata via job_name join }
+        projectName: { type: string, description: From deployment_metadata via job_name join }
+        result: { type: string }
+        stage: { type: string }
+        commitUser: { type: string }
+        commitHash: { type: string }
+        commitMessage: { type: string }
+        exception: { type: string }
+        url: { type: string }
+
+    PaginatedChecksResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CheckExportRecord'
+
+    FullChecksResponse:
+      allOf:
+        - $ref: '#/components/schemas/FullResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CheckExportRecord'
+
+    PaginatedEventsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EventExportRecord'
+
+    FullEventsResponse:
+      allOf:
+        - $ref: '#/components/schemas/FullResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EventExportRecord'
+
+    PaginatedDeploymentsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeploymentExportRecord'
+
+    FullDeploymentsResponse:
+      allOf:
+        - $ref: '#/components/schemas/FullResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeploymentExportRecord'
+
+    ByMonthChecksResponse:
+      allOf:
+        - $ref: '#/components/schemas/ByMonthResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CheckExportRecord'
+
+    ByMonthEventsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ByMonthResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/EventExportRecord'
+
+    ByMonthDeploymentsResponse:
+      allOf:
+        - $ref: '#/components/schemas/ByMonthResponseBase'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeploymentExportRecord'

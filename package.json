@@ -18,7 +18,8 @@
     "clean": "rimraf dist",
     "sam:build": "sam build --template-file infrastructure/sam/template.yaml",
     "sam:local": "sam local start-api --template-file infrastructure/sam/template.yaml",
-    "local:updown": "tsx --env-file=.env scripts/local-webhook-server.ts"
+    "local:updown": "tsx --env-file=.env scripts/local-webhook-server.ts",
+    "local:powerbi": "tsx --env-file=.env scripts/local-powerbi-server.ts"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.821.0",

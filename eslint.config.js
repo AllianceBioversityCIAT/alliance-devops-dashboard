@@ -18,6 +18,7 @@ export default [
         AbortController: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        Buffer: 'readonly',
       },
     },
     plugins: {

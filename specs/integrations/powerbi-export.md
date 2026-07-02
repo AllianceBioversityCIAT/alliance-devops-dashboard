@@ -243,6 +243,7 @@ When no metadata row exists for a job, metadata fields are returned as empty str
 | Lambda 30s timeout on large `/full` | Function timeout 60s; paginated routes preferred for large datasets |
 | Legacy deployments table outside SAM | `DeploymentsTableName` parameter; IAM policy includes table name |
 | Deployment metadata table outside SAM | `DeploymentMetadataTableName` parameter; IAM policy includes table name |
+| Updown/uptime tables are external | `UpdownChecksTableNameOverride` and `UptimeEventsTableNameOverride` reference existing tables only — **this stack never creates or deletes them** |
 | Breaking Updown webhooks | Additive SAM only; no changes to ingestion routes or auth |
 
 ## Local Testing

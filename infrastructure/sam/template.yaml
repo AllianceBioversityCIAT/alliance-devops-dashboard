@@ -32,13 +32,13 @@ Parameters:
 
   UptimeEventsTableNameOverride:
     Type: String
-    Default: ''
-    Description: Optional override for existing uptime events table name
+    Default: alliance-devops-uptime-events-dev
+    Description: Existing uptime events table (NOT created or deleted by this stack)
 
   UpdownChecksTableNameOverride:
     Type: String
-    Default: ''
-    Description: Optional override for existing updown checks table name
+    Default: alliance-devops-updown-checks-dev
+    Description: Existing updown checks table (NOT created or deleted by this stack)
 
   PowerBiApiKey:
     Type: String
@@ -54,12 +54,6 @@ Parameters:
     Type: String
     Default: deployment_metadata
     Description: Jenkins job metadata table joined by job_name for deployment exports
-
-Conditions:
-  HasCustomUptimeTableName: !Not [!Equals [!Ref UptimeEventsTableNameOverride, '']]
-  CreateUptimeEventsTable: !Not [!Condition HasCustomUptimeTableName]
-  HasCustomUpdownChecksTableName: !Not [!Equals [!Ref UpdownChecksTableNameOverride, '']]
-  CreateUpdownChecksTable: !Not [!Condition HasCustomUpdownChecksTableName]
 
 # =============================================================================
 # GLOBALS
@@ -226,84 +220,6 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
-  UptimeEventsTable:
-    Type: AWS::DynamoDB::Table
-    Condition: CreateUptimeEventsTable
-    Properties:
-      TableName: !Sub 'alliance-devops-uptime-events-${Environment}'
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-        - AttributeName: GSI1PK
-          AttributeType: S
-        - AttributeName: GSI1SK
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: GSI1
-          KeySchema:
-            - AttributeName: GSI1PK
-              KeyType: HASH
-            - AttributeName: GSI1SK
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-      Tags:
-        - Key: Project
-          Value: ALL
-        - Key: Functionality
-          Value: devops-dashboard
-        - Key: Environment
-          Value: !Ref Environment
-
-  UpdownChecksTable:
-    Type: AWS::DynamoDB::Table
-    Condition: CreateUpdownChecksTable
-    Properties:
-      TableName: !Sub 'alliance-devops-updown-checks-${Environment}'
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: PK
-          AttributeType: S
-        - AttributeName: SK
-          AttributeType: S
-        - AttributeName: GSI1PK
-          AttributeType: S
-        - AttributeName: GSI1SK
-          AttributeType: S
-      KeySchema:
-        - AttributeName: PK
-          KeyType: HASH
-        - AttributeName: SK
-          KeyType: RANGE
-      GlobalSecondaryIndexes:
-        - IndexName: GSI1
-          KeySchema:
-            - AttributeName: GSI1PK
-              KeyType: HASH
-            - AttributeName: GSI1SK
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-      PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: true
-      Tags:
-        - Key: Project
-          Value: ALL
-        - Key: Functionality
-          Value: devops-dashboard
-        - Key: Environment
-          Value: !Ref Environment
-
   # ---------------------------------------------------------------------------
   # Lambda Functions
   # ---------------------------------------------------------------------------
@@ -338,26 +254,14 @@ Resources:
           LAMBDA_NAME: updown-alert-ingestion
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref LogLevel
-          UPTIME_EVENTS_TABLE: !If
-            - HasCustomUptimeTableName
-            - !Ref UptimeEventsTableNameOverride
-            - !Ref UptimeEventsTable
-          UPDOWN_CHECKS_TABLE: !If
-            - HasCustomUpdownChecksTableName
-            - !Ref UpdownChecksTableNameOverride
-            - !Ref UpdownChecksTable
+          UPTIME_EVENTS_TABLE: !Ref UptimeEventsTableNameOverride
+          UPDOWN_CHECKS_TABLE: !Ref UpdownChecksTableNameOverride
           UPDOWN_WEBHOOK_SECRET: !Ref UpdownWebhookSecret
       Policies:
         - DynamoDBCrudPolicy:
-            TableName: !If
-              - HasCustomUptimeTableName
-              - !Ref UptimeEventsTableNameOverride
-              - !Ref UptimeEventsTable
+            TableName: !Ref UptimeEventsTableNameOverride
         - DynamoDBCrudPolicy:
-            TableName: !If
-              - HasCustomUpdownChecksTableName
-              - !Ref UpdownChecksTableNameOverride
-              - !Ref UpdownChecksTable
+            TableName: !Ref UpdownChecksTableNameOverride
       Events:
         UpdownAlertWebhook:
           Type: Api
@@ -399,27 +303,15 @@ Resources:
           LAMBDA_NAME: powerbi-data-export
           ENVIRONMENT: !Ref Environment
           LOG_LEVEL: !Ref LogLevel
-          CHECKS_TABLE_NAME: !If
-            - HasCustomUpdownChecksTableName
-            - !Ref UpdownChecksTableNameOverride
-            - !Ref UpdownChecksTable
-          EVENTS_TABLE_NAME: !If
-            - HasCustomUptimeTableName
-            - !Ref UptimeEventsTableNameOverride
-            - !Ref UptimeEventsTable
+          CHECKS_TABLE_NAME: !Ref UpdownChecksTableNameOverride
+          EVENTS_TABLE_NAME: !Ref UptimeEventsTableNameOverride
           DEPLOYMENTS_TABLE_NAME: !Ref DeploymentsTableName
           DEPLOYMENT_METADATA_TABLE_NAME: !Ref DeploymentMetadataTableName
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !If
-              - HasCustomUpdownChecksTableName
-              - !Ref UpdownChecksTableNameOverride
-              - !Ref UpdownChecksTable
+            TableName: !Ref UpdownChecksTableNameOverride
         - DynamoDBReadPolicy:
-            TableName: !If
-              - HasCustomUptimeTableName
-              - !Ref UptimeEventsTableNameOverride
-              - !Ref UptimeEventsTable
+            TableName: !Ref UptimeEventsTableNameOverride
         - DynamoDBReadPolicy:
             TableName: !Ref DeploymentsTableName
         - DynamoDBReadPolicy:
@@ -560,18 +452,12 @@ Outputs:
     Value: !Ref PlatformsTable
 
   UptimeEventsTableName:
-    Description: DynamoDB uptime events table name
-    Value: !If
-      - HasCustomUptimeTableName
-      - !Ref UptimeEventsTableNameOverride
-      - !Ref UptimeEventsTable
+    Description: DynamoDB uptime events table name (external; not managed by stack)
+    Value: !Ref UptimeEventsTableNameOverride
 
   UpdownChecksTableName:
-    Description: DynamoDB updown checks registry table name
-    Value: !If
-      - HasCustomUpdownChecksTableName
-      - !Ref UpdownChecksTableNameOverride
-      - !Ref UpdownChecksTable
+    Description: DynamoDB updown checks registry table name (external; not managed by stack)
+    Value: !Ref UpdownChecksTableNameOverride
 
   UpdownAlertWebhookUrl:
     Description: Updown alert webhook URL

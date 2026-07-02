@@ -498,6 +498,9 @@ components:
         buildDate: { type: string }
         buildNumber: { type: string }
         job: { type: string }
+        applicationName: { type: string, description: From deployment_metadata via job_name join }
+        environment: { type: string, description: From deployment_metadata via job_name join }
+        projectName: { type: string, description: From deployment_metadata via job_name join }
         result: { type: string }
         stage: { type: string }
         commitUser: { type: string }

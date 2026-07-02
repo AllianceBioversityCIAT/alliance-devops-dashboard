@@ -59,7 +59,7 @@ The export Lambda **only reads** tables populated by ingestion. It does not inte
 | Per-route auth | `ApiKeyRequired: true` only on `/powerbi/*` routes |
 | No global API auth | Do not set `Globals.Api.Auth.ApiKeyRequired` |
 | Isolated secrets | `PowerBiApiKey` parameter is independent from `UpdownWebhookSecret` |
-| Scoped env vars | `CHECKS_TABLE_NAME`, `EVENTS_TABLE_NAME`, `DEPLOYMENTS_TABLE_NAME` only on `powerbi-data-export` |
+| Scoped env vars | `CHECKS_TABLE_NAME`, `EVENTS_TABLE_NAME`, `DEPLOYMENTS_TABLE_NAME`, `DEPLOYMENT_METADATA_TABLE_NAME` only on `powerbi-data-export` |
 
 ## HTTP Endpoints
 
@@ -160,6 +160,7 @@ API key value is provisioned at deploy time from AWS Secrets Manager:
 | Checks | `alliance-devops-updown-checks-dev` | Scan | PK/SK composite keys |
 | Events | `alliance-devops-uptime-events-dev` | Scan | Includes `rawPayload` |
 | Deployments | `jenkinsexecutions_test` | Scan | Legacy flat schema, partition key `id` |
+| Deployment metadata | `deployment_metadata` | BatchGet by `job_name` | Joined to deployments via `job` |
 
 ### Deployment record shape (legacy)
 
@@ -195,7 +196,16 @@ All attributes stored as DynamoDB strings:
 
 ### Deployments
 
-`id`, `buildDate`, `buildNumber`, `job`, `result`, `stage`, `commitUser`, `commitHash`, `commitMessage`, `exception`, `url`
+Legacy execution fields plus metadata joined from `deployment_metadata` by matching `job` → `job_name`:
+
+| Export field | Source |
+|--------------|--------|
+| `id`, `buildDate`, `buildNumber`, `job`, `result`, `stage`, `commitUser`, `commitHash`, `commitMessage`, `exception`, `url` | `jenkinsexecutions_test` |
+| `applicationName` | `deployment_metadata.application_name` |
+| `environment` | `deployment_metadata.environment` |
+| `projectName` | `deployment_metadata.project_name` |
+
+When no metadata row exists for a job, metadata fields are returned as empty strings.
 
 ## Environment Variables
 
@@ -210,6 +220,7 @@ All attributes stored as DynamoDB strings:
 | `CHECKS_TABLE_NAME` | Yes | `alliance-devops-updown-checks-dev` |
 | `EVENTS_TABLE_NAME` | Yes | `alliance-devops-uptime-events-dev` |
 | `DEPLOYMENTS_TABLE_NAME` | Yes | `jenkinsexecutions_test` |
+| `DEPLOYMENT_METADATA_TABLE_NAME` | Yes | `deployment_metadata` |
 
 `POWERBI_API_KEY` is **not** a Lambda environment variable. It configures the API Gateway API key at deploy time.
 
@@ -231,6 +242,7 @@ All attributes stored as DynamoDB strings:
 | `/full` scans entire table (RCU, latency) | Document; acceptable for dev; consider S3 export later |
 | Lambda 30s timeout on large `/full` | Function timeout 60s; paginated routes preferred for large datasets |
 | Legacy deployments table outside SAM | `DeploymentsTableName` parameter; IAM policy includes table name |
+| Deployment metadata table outside SAM | `DeploymentMetadataTableName` parameter; IAM policy includes table name |
 | Breaking Updown webhooks | Additive SAM only; no changes to ingestion routes or auth |
 
 ## Local Testing
@@ -279,6 +291,6 @@ curl -s -H "x-api-key: {API_KEY}" \
 - [ ] Paginated responses include `data`, `count`, `nextToken`
 - [ ] Full responses include `data`, `count`, `generatedAt`
 - [ ] `limit` capped at 1000
-- [ ] Deployments read from `jenkinsexecutions_test` with legacy field mapping
+- [ ] Deployments read from `jenkinsexecutions_test` with legacy field mapping and metadata join from `deployment_metadata`
 - [ ] OpenAPI documents all endpoints
 - [ ] Unit tests cover router, pagination tokens, and mappers

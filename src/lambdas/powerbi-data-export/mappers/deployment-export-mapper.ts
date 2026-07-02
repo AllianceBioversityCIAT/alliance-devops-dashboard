@@ -1,8 +1,17 @@
+export interface DeploymentJobMetadata {
+  applicationName: string;
+  environment: string;
+  projectName: string;
+}
+
 export interface DeploymentExportRecord {
   id: string;
   buildDate: string;
   buildNumber: string;
   job: string;
+  applicationName: string;
+  environment: string;
+  projectName: string;
   result: string;
   stage: string;
   commitUser: string;
@@ -19,12 +28,21 @@ function asString(value: unknown, fallback = ''): string {
   return String(value);
 }
 
-export function mapDeploymentExportItem(item: Record<string, unknown>): DeploymentExportRecord {
+export function mapDeploymentExportItem(
+  item: Record<string, unknown>,
+  metadataByJob?: ReadonlyMap<string, DeploymentJobMetadata>,
+): DeploymentExportRecord {
+  const job = asString(item.job);
+  const metadata = metadataByJob?.get(job);
+
   return {
     id: asString(item.id),
     buildDate: asString(item.buildDate),
     buildNumber: asString(item.buildNumber),
-    job: asString(item.job),
+    job,
+    applicationName: metadata?.applicationName ?? '',
+    environment: metadata?.environment ?? '',
+    projectName: metadata?.projectName ?? '',
     result: asString(item.result),
     stage: asString(item.stage),
     commitUser: asString(item.commitUser),
@@ -37,6 +55,7 @@ export function mapDeploymentExportItem(item: Record<string, unknown>): Deployme
 
 export function mapDeploymentExportItems(
   items: Record<string, unknown>[],
+  metadataByJob?: ReadonlyMap<string, DeploymentJobMetadata>,
 ): DeploymentExportRecord[] {
-  return items.map(mapDeploymentExportItem);
+  return items.map((item) => mapDeploymentExportItem(item, metadataByJob));
 }

@@ -11,6 +11,9 @@ import {
   type DeploymentExportRecord,
 } from '../mappers/deployment-export-mapper.js';
 import {
+  DeploymentMetadataRepository,
+} from './deployment-metadata-repository.js';
+import {
   mapEventExportItems,
   type EventExportRecord,
 } from '../mappers/event-export-mapper.js';
@@ -144,13 +147,32 @@ export class PowerBiEventExportRepository {
 
 export class PowerBiDeploymentExportRepository {
   private readonly scanRepository: DynamoScanRepository;
+  private readonly metadataRepository: DeploymentMetadataRepository;
 
-  constructor(config: PowerBiExportConfig, scanRepository?: DynamoScanRepository) {
+  constructor(
+    config: PowerBiExportConfig,
+    scanRepository?: DynamoScanRepository,
+    metadataRepository?: DeploymentMetadataRepository,
+  ) {
     this.scanRepository =
       scanRepository ??
       new DynamoScanRepository({
         tableName: config.deploymentsTableName,
       });
+    this.metadataRepository =
+      metadataRepository ??
+      new DeploymentMetadataRepository({
+        tableName: config.deploymentMetadataTableName,
+      });
+  }
+
+  private async mapWithMetadata(
+    items: Record<string, unknown>[],
+  ): Promise<DeploymentExportRecord[]> {
+    const metadataByJob = await this.metadataRepository.getByJobNames(
+      items.map((item) => String(item.job ?? '')),
+    );
+    return mapDeploymentExportItems(items, metadataByJob);
   }
 
   async scanPage(
@@ -159,7 +181,7 @@ export class PowerBiDeploymentExportRepository {
   ): Promise<PaginatedExportResult<DeploymentExportRecord>> {
     const page = await this.scanRepository.scanPage(limit, exclusiveStartKey);
     return {
-      data: mapDeploymentExportItems(page.items),
+      data: await this.mapWithMetadata(page.items),
       nextToken: page.lastEvaluatedKey ? encodeNextToken(page.lastEvaluatedKey) : undefined,
     };
   }
@@ -175,13 +197,13 @@ export class PowerBiDeploymentExportRepository {
       exclusiveStartKey,
     );
     return {
-      data: mapDeploymentExportItems(page.items),
+      data: await this.mapWithMetadata(page.items),
       nextToken: page.lastEvaluatedKey ? encodeNextToken(page.lastEvaluatedKey) : undefined,
     };
   }
 
   async scanAll(): Promise<DeploymentExportRecord[]> {
     const items = await this.scanRepository.scanAll();
-    return mapDeploymentExportItems(items);
+    return this.mapWithMetadata(items);
   }
 }

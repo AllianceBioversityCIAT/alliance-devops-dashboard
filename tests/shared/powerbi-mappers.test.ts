@@ -64,5 +64,42 @@ describe('powerbi export mappers', () => {
 
     expect(mapped.buildNumber).toBe('196');
     expect(mapped.job).toBe('clarisa-application-dev');
+    expect(mapped.applicationName).toBe('');
+    expect(mapped.environment).toBe('');
+    expect(mapped.projectName).toBe('');
+  });
+
+  it('enriches deployment items with metadata joined by job', () => {
+    const metadataByJob = new Map([
+      [
+        'roar-management-dev',
+        {
+          applicationName: 'star management',
+          environment: 'dev',
+          projectName: 'STAR',
+        },
+      ],
+    ]);
+
+    const mapped = mapDeploymentExportItem(
+      {
+        id: 'a3ef0a0b-41a7-454e-9f6e-9d7fc7e1d682',
+        buildDate: '2026-06-04 12:55:41',
+        buildNumber: '196',
+        job: 'roar-management-dev',
+        result: 'SUCCESS',
+        stage: 'Declarative: Post Actions',
+        commitUser: 'Juan',
+        commitHash: '064bc091',
+        commitMessage: 'Merge branch',
+        exception: '',
+        url: 'https://automation.example/job/196/',
+      },
+      metadataByJob,
+    );
+
+    expect(mapped.applicationName).toBe('star management');
+    expect(mapped.environment).toBe('dev');
+    expect(mapped.projectName).toBe('STAR');
   });
 });

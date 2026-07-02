@@ -50,6 +50,11 @@ Parameters:
     Default: jenkinsexecutions_test
     Description: Legacy Jenkins executions table for Power BI deployments export
 
+  DeploymentMetadataTableName:
+    Type: String
+    Default: deployment_metadata
+    Description: Jenkins job metadata table joined by job_name for deployment exports
+
 Conditions:
   HasCustomUptimeTableName: !Not [!Equals [!Ref UptimeEventsTableNameOverride, '']]
   CreateUptimeEventsTable: !Not [!Condition HasCustomUptimeTableName]
@@ -403,6 +408,7 @@ Resources:
             - !Ref UptimeEventsTableNameOverride
             - !Ref UptimeEventsTable
           DEPLOYMENTS_TABLE_NAME: !Ref DeploymentsTableName
+          DEPLOYMENT_METADATA_TABLE_NAME: !Ref DeploymentMetadataTableName
       Policies:
         - DynamoDBReadPolicy:
             TableName: !If
@@ -416,6 +422,8 @@ Resources:
               - !Ref UptimeEventsTable
         - DynamoDBReadPolicy:
             TableName: !Ref DeploymentsTableName
+        - DynamoDBReadPolicy:
+            TableName: !Ref DeploymentMetadataTableName
       Events:
         PowerBiChecksFull:
           Type: Api

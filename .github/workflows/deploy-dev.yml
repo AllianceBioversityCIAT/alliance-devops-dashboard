@@ -193,6 +193,7 @@ jobs:
               "UpdownWebhookSecret=${{ steps.secret.outputs.value }}" \
               "PowerBiApiKey=${{ steps.powerbi_secret.outputs.value }}" \
               "DeploymentsTableName=jenkinsexecutions_test" \
+              "DeploymentMetadataTableName=deployment_metadata" \
             --capabilities CAPABILITY_IAM \
             --region "${{ env.AWS_REGION }}" \
             --resolve-s3

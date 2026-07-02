@@ -137,7 +137,12 @@ function validateLocalEnv(): void {
   process.env.LAMBDA_NAME = 'powerbi-data-export';
   process.env.ENVIRONMENT ??= 'dev';
 
-  const required = ['CHECKS_TABLE_NAME', 'EVENTS_TABLE_NAME', 'DEPLOYMENTS_TABLE_NAME'];
+  const required = [
+    'CHECKS_TABLE_NAME',
+    'EVENTS_TABLE_NAME',
+    'DEPLOYMENTS_TABLE_NAME',
+    'DEPLOYMENT_METADATA_TABLE_NAME',
+  ];
 
   for (const name of required) {
     if (!process.env[name]) {

@@ -6,6 +6,7 @@ export interface PowerBiExportConfig {
   checksTableName: string;
   eventsTableName: string;
   deploymentsTableName: string;
+  deploymentMetadataTableName: string;
 }
 
 function requireEnv(name: string): string {
@@ -40,6 +41,7 @@ export function loadPowerBiExportConfig(
     checksTableName: requireEnv('CHECKS_TABLE_NAME'),
     eventsTableName: requireEnv('EVENTS_TABLE_NAME'),
     deploymentsTableName: requireEnv('DEPLOYMENTS_TABLE_NAME'),
+    deploymentMetadataTableName: requireEnv('DEPLOYMENT_METADATA_TABLE_NAME'),
     ...overrides,
   };
 

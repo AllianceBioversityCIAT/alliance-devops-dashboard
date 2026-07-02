@@ -10,6 +10,7 @@ vi.mock('../../src/shared/config/powerbi-export.config.js', () => ({
     checksTableName: 'alliance-devops-updown-checks-dev',
     eventsTableName: 'alliance-devops-uptime-events-dev',
     deploymentsTableName: 'jenkinsexecutions_test',
+    deploymentMetadataTableName: 'deployment_metadata',
   })),
 }));
 

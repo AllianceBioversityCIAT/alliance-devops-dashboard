@@ -40,6 +40,16 @@ Parameters:
     Default: ''
     Description: Optional override for existing updown checks table name
 
+  PowerBiApiKey:
+    Type: String
+    NoEcho: true
+    Description: API key value for Power BI export routes (x-api-key header)
+
+  DeploymentsTableName:
+    Type: String
+    Default: jenkinsexecutions_test
+    Description: Legacy Jenkins executions table for Power BI deployments export
+
 Conditions:
   HasCustomUptimeTableName: !Not [!Equals [!Ref UptimeEventsTableNameOverride, '']]
   CreateUptimeEventsTable: !Not [!Condition HasCustomUptimeTableName]
@@ -369,6 +379,132 @@ Resources:
             Path: /ingest/release-notes
             Method: POST
 
+  PowerBiDataExportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'alliance-devops-powerbi-data-export-${Environment}'
+      Description: Exports DynamoDB data for Power BI and Lakehouse consumption
+      CodeUri: ../../dist/
+      Handler: lambdas/powerbi-data-export/index.handler
+      Timeout: 60
+      MemorySize: 512
+      Environment:
+        Variables:
+          APP_NAME: alliance-devops-dashboard
+          LAMBDA_NAME: powerbi-data-export
+          ENVIRONMENT: !Ref Environment
+          LOG_LEVEL: !Ref LogLevel
+          CHECKS_TABLE_NAME: !If
+            - HasCustomUpdownChecksTableName
+            - !Ref UpdownChecksTableNameOverride
+            - !Ref UpdownChecksTable
+          EVENTS_TABLE_NAME: !If
+            - HasCustomUptimeTableName
+            - !Ref UptimeEventsTableNameOverride
+            - !Ref UptimeEventsTable
+          DEPLOYMENTS_TABLE_NAME: !Ref DeploymentsTableName
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !If
+              - HasCustomUpdownChecksTableName
+              - !Ref UpdownChecksTableNameOverride
+              - !Ref UpdownChecksTable
+        - DynamoDBReadPolicy:
+            TableName: !If
+              - HasCustomUptimeTableName
+              - !Ref UptimeEventsTableNameOverride
+              - !Ref UptimeEventsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DeploymentsTableName
+      Events:
+        PowerBiChecksFull:
+          Type: Api
+          Properties:
+            Path: /powerbi/checks/full
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiChecks:
+          Type: Api
+          Properties:
+            Path: /powerbi/checks
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiChecksByMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/checks/by-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiEventsFull:
+          Type: Api
+          Properties:
+            Path: /powerbi/events/full
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiEvents:
+          Type: Api
+          Properties:
+            Path: /powerbi/events
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiEventsByMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/events/by-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiDeploymentsFull:
+          Type: Api
+          Properties:
+            Path: /powerbi/deployments/full
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiDeployments:
+          Type: Api
+          Properties:
+            Path: /powerbi/deployments
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiDeploymentsByMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/deployments/by-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+
+  PowerBiApiKeyResource:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub 'powerbi-export-${Environment}'
+      Enabled: true
+      Value: !Ref PowerBiApiKey
+
+  PowerBiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ServerlessRestApiProdStage
+    Properties:
+      UsagePlanName: !Sub 'powerbi-export-${Environment}'
+      ApiStages:
+        - ApiId: !Ref ServerlessRestApi
+          Stage: Prod
+
+  PowerBiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref PowerBiApiKeyResource
+      KeyType: API_KEY
+      UsagePlanId: !Ref PowerBiUsagePlan
+
 # =============================================================================
 # OUTPUTS
 # =============================================================================
@@ -411,3 +547,7 @@ Outputs:
   UpdownAlertWebhookUrl:
     Description: Updown alert webhook URL
     Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/api/webhooks/updown/alerts'
+
+  PowerBiExportBaseUrl:
+    Description: Power BI export API base URL
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/powerbi'

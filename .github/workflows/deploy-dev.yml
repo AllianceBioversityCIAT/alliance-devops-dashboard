@@ -192,6 +192,8 @@ jobs:
               "LogLevel=${{ env.LOG_LEVEL }}" \
               "UpdownWebhookSecret=${{ steps.secret.outputs.value }}" \
               "PowerBiApiKey=${{ steps.powerbi_secret.outputs.value }}" \
+              "UpdownChecksTableNameOverride=alliance-devops-updown-checks-dev" \
+              "UptimeEventsTableNameOverride=alliance-devops-uptime-events-dev" \
               "DeploymentsTableName=jenkinsexecutions_test" \
               "DeploymentMetadataTableName=deployment_metadata" \
             --capabilities CAPABILITY_IAM \

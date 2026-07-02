@@ -10,7 +10,7 @@ stack_name = "devops-dashboard-dev"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=dev LogLevel=debug UpdownWebhookSecret=replace_me"
+parameter_overrides = "Environment=dev LogLevel=debug UpdownWebhookSecret=replace_me UpdownChecksTableNameOverride=alliance-devops-updown-checks-dev UptimeEventsTableNameOverride=alliance-devops-uptime-events-dev DeploymentsTableName=jenkinsexecutions_test DeploymentMetadataTableName=deployment_metadata"
 resolve_s3 = true
 tags = "Project=\"ALL\" Functionality=\"devops-dashboard\" Environment=\"dev\""
 

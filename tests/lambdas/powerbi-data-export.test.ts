@@ -16,6 +16,7 @@ vi.mock('../../src/shared/config/powerbi-export.config.js', () => ({
 const mockGetChecksPage = vi.fn();
 const mockGetChecksFull = vi.fn();
 const mockGetChecksByMonth = vi.fn();
+const mockGetChecksCurrentMonth = vi.fn();
 const mockGetEventsPage = vi.fn();
 const mockGetEventsFull = vi.fn();
 const mockGetDeploymentsPage = vi.fn();
@@ -26,6 +27,7 @@ vi.mock('../../src/lambdas/powerbi-data-export/services/powerbi-export-service.j
     getChecksPage: mockGetChecksPage,
     getChecksFull: mockGetChecksFull,
     getChecksByMonth: mockGetChecksByMonth,
+    getChecksCurrentMonth: mockGetChecksCurrentMonth,
     getEventsPage: mockGetEventsPage,
     getEventsFull: mockGetEventsFull,
     getDeploymentsPage: mockGetDeploymentsPage,
@@ -132,6 +134,32 @@ describe('powerbi-data-export handler', () => {
     expect(body.month).toBe(6);
     expect(body.year).toBe(2026);
     expect(body.fromDate).toBe('2026-06-01T00:00:00.000Z');
+  });
+
+  it('returns current-month checks with month and year metadata', async () => {
+    mockGetChecksCurrentMonth.mockResolvedValue({
+      data: [{ checkToken: 'maoy' }],
+      period: {
+        month: 6,
+        year: 2026,
+        fromDate: '2026-06-01T00:00:00.000Z',
+        toDate: '2026-06-30T23:59:59.999Z',
+        fromDeploymentDate: '2026-06-01 00:00:00',
+        toDeploymentDate: '2026-06-30 23:59:59',
+      },
+    });
+
+    const result = await handler(
+      createMockEvent('/powerbi/checks/current-month', { limit: '50' }),
+      mockContext,
+    );
+    const body = JSON.parse(result.body ?? '{}');
+
+    expect(result.statusCode).toBe(200);
+    expect(mockGetChecksCurrentMonth).toHaveBeenCalledWith({ limit: '50' });
+    expect(body.count).toBe(1);
+    expect(body.month).toBe(6);
+    expect(body.year).toBe(2026);
   });
 
   it('returns 404 for unknown route', async () => {

@@ -9,7 +9,7 @@
 
 ## Overview
 
-This specification defines a **read-only export API** for Power BI / Lakehouse consumption. A single Lambda exposes nine GET endpoints that scan DynamoDB tables and return clean JSON payloads.
+This specification defines a **read-only export API** for Power BI / Lakehouse consumption. A single Lambda exposes twelve GET endpoints that scan DynamoDB tables and return clean JSON payloads.
 
 This component is **additive**: it does not modify ingestion Lambdas, webhook routes, or the Updown alert flow.
 
@@ -33,14 +33,14 @@ This component is **additive**: it does not modify ingestion Lambdas, webhook ro
 Power BI / Lakehouse
         │  GET + x-api-key
         ▼
-  API Gateway (9 routes, ApiKeyRequired: true)
+  API Gateway (12 routes, ApiKeyRequired: true)
         │
         ▼
   Lambda: powerbi-data-export (internal router)
         │
-        ├── GET /powerbi/checks[/full|/by-month]   → alliance-devops-updown-checks-{env}
-        ├── GET /powerbi/events[/full|/by-month]   → alliance-devops-uptime-events-{env}
-        └── GET /powerbi/deployments[/full|/by-month] → jenkinsexecutions_test (legacy)
+        ├── GET /powerbi/checks[/full|/by-month|/current-month]   → alliance-devops-updown-checks-{env}
+        ├── GET /powerbi/events[/full|/by-month|/current-month]   → alliance-devops-uptime-events-{env}
+        └── GET /powerbi/deployments[/full|/by-month|/current-month] → jenkinsexecutions_test (legacy)
 ```
 
 ### Updown ingestion (unchanged)
@@ -70,10 +70,13 @@ The export Lambda **only reads** tables populated by ingestion. It does not inte
 | GET | `/powerbi/deployments/full` | Full | All Jenkins execution records |
 | GET | `/powerbi/checks` | Paginated | Checks page (`limit`, `nextToken`) |
 | GET | `/powerbi/checks/by-month` | By month | Checks updated in a calendar month (`month`, `year`) |
+| GET | `/powerbi/checks/current-month` | Current month | Same as by-month for the current UTC calendar month |
 | GET | `/powerbi/events` | Paginated | Events page |
 | GET | `/powerbi/events/by-month` | By month | Events that occurred in a calendar month |
+| GET | `/powerbi/events/current-month` | Current month | Same as by-month for the current UTC calendar month |
 | GET | `/powerbi/deployments` | Paginated | Deployments page |
 | GET | `/powerbi/deployments/by-month` | By month | Jenkins executions in a calendar month |
+| GET | `/powerbi/deployments/current-month` | Current month | Same as by-month for the current UTC calendar month |
 
 OpenAPI: `docs/openapi/powerbi-export.yaml`
 
@@ -88,16 +91,16 @@ API key value is provisioned at deploy time from AWS Secrets Manager:
 - Secret path (dev): `dev/app/backend/devops-dashboard/powerbi-export`
 - JSON key: `POWERBI_API_KEY`
 
-### Query parameters (paginated and by-month routes)
+### Query parameters (paginated, by-month, and current-month routes)
 
 | Parameter | Type | Default | Max | Description |
 |-----------|------|---------|-----|-------------|
-| `month` | integer | — | — | Required for `/by-month` routes (1-12) |
-| `year` | integer | — | — | Required for `/by-month` routes (UTC calendar year) |
+| `month` | integer | — | — | Required for `/by-month` routes only (1-12) |
+| `year` | integer | — | — | Required for `/by-month` routes only (UTC calendar year) |
 | `limit` | integer | 100 | 1000 | Page size |
 | `nextToken` | string | — | — | Base64-encoded DynamoDB `LastEvaluatedKey` |
 
-**By-month window:** full calendar month in UTC.
+**By-month and current-month window:** full calendar month in UTC. `/current-month` routes resolve month/year automatically (no `month`/`year` params).
 
 | Dataset | Filter field | Format |
 |---------|--------------|--------|
@@ -256,6 +259,10 @@ curl -s -H "x-api-key: {API_KEY}" \
 curl -s -H "x-api-key: {API_KEY}" \
   "{API_BASE}/powerbi/deployments/by-month?month=6&year=2026&limit=100"
 
+# Deployments for the current UTC month
+curl -s -H "x-api-key: {API_KEY}" \
+  "{API_BASE}/powerbi/deployments/current-month?limit=100"
+
 # Full events
 curl -s -H "x-api-key: {API_KEY}" \
   "{API_BASE}/powerbi/events/full"
@@ -267,7 +274,7 @@ curl -s -H "x-api-key: {API_KEY}" \
 
 ## Acceptance Criteria
 
-- [ ] Nine GET routes deployed with `ApiKeyRequired: true`
+- [ ] Twelve GET routes deployed with `ApiKeyRequired: true`
 - [ ] Updown webhook route unchanged and still accepts `x-webhook-secret`
 - [ ] Paginated responses include `data`, `count`, `nextToken`
 - [ ] Full responses include `data`, `count`, `generatedAt`

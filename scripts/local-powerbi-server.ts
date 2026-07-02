@@ -13,12 +13,15 @@ const POWERBI_PATHS = [
   '/powerbi/checks',
   '/powerbi/checks/full',
   '/powerbi/checks/by-month',
+  '/powerbi/checks/current-month',
   '/powerbi/events',
   '/powerbi/events/full',
   '/powerbi/events/by-month',
+  '/powerbi/events/current-month',
   '/powerbi/deployments',
   '/powerbi/deployments/full',
   '/powerbi/deployments/by-month',
+  '/powerbi/deployments/current-month',
 ];
 
 function buildApiGatewayEvent(req: IncomingMessage, path: string): APIGatewayProxyEvent {

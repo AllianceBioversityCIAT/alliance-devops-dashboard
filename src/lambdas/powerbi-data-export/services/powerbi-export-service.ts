@@ -93,6 +93,17 @@ export class PowerBiExportService {
     return { ...result, period };
   }
 
+  async getChecksCurrentMonth(
+    input: PaginationInput,
+  ): Promise<PaginatedExportResultWithPeriod<CheckExportRecord>> {
+    const now = new Date();
+    return this.getChecksByMonth({
+      ...input,
+      month: String(now.getUTCMonth() + 1),
+      year: String(now.getUTCFullYear()),
+    });
+  }
+
   async getEventsPage(input: PaginationInput): Promise<PaginatedExportResult<EventExportRecord>> {
     const pagination = resolvePagination(input);
     this.logger.info('Fetching events page', { limit: pagination.limit });
@@ -120,6 +131,17 @@ export class PowerBiExportService {
       pagination.exclusiveStartKey,
     );
     return { ...result, period };
+  }
+
+  async getEventsCurrentMonth(
+    input: PaginationInput,
+  ): Promise<PaginatedExportResultWithPeriod<EventExportRecord>> {
+    const now = new Date();
+    return this.getEventsByMonth({
+      ...input,
+      month: String(now.getUTCMonth() + 1),
+      year: String(now.getUTCFullYear()),
+    });
   }
 
   async getDeploymentsPage(
@@ -151,5 +173,16 @@ export class PowerBiExportService {
       pagination.exclusiveStartKey,
     );
     return { ...result, period };
+  }
+
+  async getDeploymentsCurrentMonth(
+    input: PaginationInput,
+  ): Promise<PaginatedExportResultWithPeriod<DeploymentExportRecord>> {
+    const now = new Date();
+    return this.getDeploymentsByMonth({
+      ...input,
+      month: String(now.getUTCMonth() + 1),
+      year: String(now.getUTCFullYear()),
+    });
   }
 }

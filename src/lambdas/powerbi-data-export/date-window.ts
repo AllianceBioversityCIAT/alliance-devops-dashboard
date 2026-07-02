@@ -19,6 +19,13 @@ export interface MonthPeriod {
   toDeploymentDate: string;
 }
 
+export function getCurrentMonthPeriod(referenceDate = new Date()): MonthPeriod {
+  return buildMonthPeriod(
+    referenceDate.getUTCMonth() + 1,
+    referenceDate.getUTCFullYear(),
+  );
+}
+
 export function resolveMonthPeriod(input: MonthYearInput): MonthPeriod {
   if (!input.month?.trim() || !input.year?.trim()) {
     throw new PeriodError('month and year query parameters are required');
@@ -35,6 +42,10 @@ export function resolveMonthPeriod(input: MonthYearInput): MonthPeriod {
     throw new PeriodError('year must be an integer between 1970 and 9999');
   }
 
+  return buildMonthPeriod(month, year);
+}
+
+function buildMonthPeriod(month: number, year: number): MonthPeriod {
   const from = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
   const to = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 

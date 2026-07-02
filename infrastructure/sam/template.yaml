@@ -438,6 +438,13 @@ Resources:
             Method: get
             Auth:
               ApiKeyRequired: true
+        PowerBiChecksCurrentMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/checks/current-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
         PowerBiEventsFull:
           Type: Api
           Properties:
@@ -459,6 +466,13 @@ Resources:
             Method: get
             Auth:
               ApiKeyRequired: true
+        PowerBiEventsCurrentMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/events/current-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
         PowerBiDeploymentsFull:
           Type: Api
           Properties:
@@ -477,6 +491,13 @@ Resources:
           Type: Api
           Properties:
             Path: /powerbi/deployments/by-month
+            Method: get
+            Auth:
+              ApiKeyRequired: true
+        PowerBiDeploymentsCurrentMonth:
+          Type: Api
+          Properties:
+            Path: /powerbi/deployments/current-month
             Method: get
             Auth:
               ApiKeyRequired: true

@@ -31,6 +31,11 @@ export class ChecksController {
     const result = await this.service.getChecksByMonth(queryParams(params));
     return byMonthResponse(result.data, result.period, result.nextToken);
   }
+
+  async getCurrentMonth(params: APIGatewayProxyEventQueryStringParameters | null) {
+    const result = await this.service.getChecksCurrentMonth(queryParams(params));
+    return byMonthResponse(result.data, result.period, result.nextToken);
+  }
 }
 
 export class EventsController {
@@ -50,6 +55,11 @@ export class EventsController {
     const result = await this.service.getEventsByMonth(queryParams(params));
     return byMonthResponse(result.data, result.period, result.nextToken);
   }
+
+  async getCurrentMonth(params: APIGatewayProxyEventQueryStringParameters | null) {
+    const result = await this.service.getEventsCurrentMonth(queryParams(params));
+    return byMonthResponse(result.data, result.period, result.nextToken);
+  }
 }
 
 export class DeploymentsController {
@@ -67,6 +77,11 @@ export class DeploymentsController {
 
   async getByMonth(params: APIGatewayProxyEventQueryStringParameters | null) {
     const result = await this.service.getDeploymentsByMonth(queryParams(params));
+    return byMonthResponse(result.data, result.period, result.nextToken);
+  }
+
+  async getCurrentMonth(params: APIGatewayProxyEventQueryStringParameters | null) {
+    const result = await this.service.getDeploymentsCurrentMonth(queryParams(params));
     return byMonthResponse(result.data, result.period, result.nextToken);
   }
 }

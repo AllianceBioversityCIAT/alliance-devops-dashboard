@@ -21,14 +21,20 @@ export function createPowerBiRouter(service: PowerBiExportService): PowerBiRoute
     'GET /powerbi/checks/full': async () => checksController.getFull(),
     'GET /powerbi/checks/by-month': async (event) =>
       checksController.getByMonth(event.queryStringParameters),
+    'GET /powerbi/checks/current-month': async (event) =>
+      checksController.getCurrentMonth(event.queryStringParameters),
     'GET /powerbi/checks': async (event) => checksController.getPage(event.queryStringParameters),
     'GET /powerbi/events/full': async () => eventsController.getFull(),
     'GET /powerbi/events/by-month': async (event) =>
       eventsController.getByMonth(event.queryStringParameters),
+    'GET /powerbi/events/current-month': async (event) =>
+      eventsController.getCurrentMonth(event.queryStringParameters),
     'GET /powerbi/events': async (event) => eventsController.getPage(event.queryStringParameters),
     'GET /powerbi/deployments/full': async () => deploymentsController.getFull(),
     'GET /powerbi/deployments/by-month': async (event) =>
       deploymentsController.getByMonth(event.queryStringParameters),
+    'GET /powerbi/deployments/current-month': async (event) =>
+      deploymentsController.getCurrentMonth(event.queryStringParameters),
     'GET /powerbi/deployments': async (event) =>
       deploymentsController.getPage(event.queryStringParameters),
   };

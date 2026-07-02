@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   resolveMonthPeriod,
+  getCurrentMonthPeriod,
   formatDeploymentBuildDate,
   PeriodError,
 } from '../../src/lambdas/powerbi-data-export/date-window.js';
@@ -15,6 +16,15 @@ describe('powerbi month period', () => {
     expect(period.toDate).toBe('2026-06-30T23:59:59.999Z');
     expect(period.fromDeploymentDate).toBe('2026-06-01 00:00:00');
     expect(period.toDeploymentDate).toBe('2026-06-30 23:59:59');
+  });
+
+  it('builds the current UTC calendar month window', () => {
+    const period = getCurrentMonthPeriod(new Date('2026-06-15T12:00:00.000Z'));
+
+    expect(period.month).toBe(6);
+    expect(period.year).toBe(2026);
+    expect(period.fromDate).toBe('2026-06-01T00:00:00.000Z');
+    expect(period.toDate).toBe('2026-06-30T23:59:59.999Z');
   });
 
   it('formats deployment build dates consistently', () => {

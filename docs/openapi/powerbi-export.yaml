@@ -111,6 +111,29 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /powerbi/checks/current-month:
+    get:
+      summary: List checks for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `updatedAt`. Supports `limit` and `nextToken`.
+      operationId: listChecksCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Checks for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthChecksResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /powerbi/events:
     get:
       summary: List uptime events (paginated)
@@ -181,6 +204,29 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
+  /powerbi/events/current-month:
+    get:
+      summary: List uptime events for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `occurredAt`. Supports `limit` and `nextToken`.
+      operationId: listEventsCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Events for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthEventsResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /powerbi/deployments:
     get:
       summary: List Jenkins executions (paginated)
@@ -246,6 +292,29 @@ paths:
                 $ref: '#/components/schemas/ByMonthDeploymentsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /powerbi/deployments/current-month:
+    get:
+      summary: List Jenkins executions for the current calendar month
+      description: Same as by-month for the current UTC month. Filtered by `buildDate`. Supports `limit` and `nextToken`.
+      operationId: listDeploymentsCurrentMonth
+      tags: [Power BI Export]
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Deployments for the current month
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ByMonthDeploymentsResponse'
         '403':
           $ref: '#/components/responses/Forbidden'
         '500':
